@@ -30,6 +30,12 @@ function Weather() {
   };
 
   async function fetchCities() {
+    while (notifyRef.current.firstChild) {
+      notifyRef.current.removeChild(notifyRef.current.firstChild);
+    }
+    if (weather == null) {
+      notifyRef.current.classList.remove("text-red-400");
+    }
     if (searchInput.length > 2) {
       try {
         const url = `https://api.weatherapi.com/v1/search.json?key=d3ec53b7238e4be58fe224501240203&q=${searchInput}`;
@@ -39,9 +45,6 @@ function Weather() {
           if (cities.length > 0) {
             notifyRef.current.classList.remove("hidden");
             notifyRef.current.classList.add("text-black", "flex", "flex-col");
-            while (notifyRef.current.firstChild) {
-              notifyRef.current.removeChild(notifyRef.current.firstChild);
-            }
             cities.forEach((city) => {
               let one = document.createElement("button");
               one.classList.add(
@@ -50,7 +53,8 @@ function Weather() {
                 "w-full",
                 "rounded-lg",
                 "border",
-                "border-gray-800"
+                "border-gray-800",
+                "text-black"
               );
               one.textContent = city.name;
               one.addEventListener("click", () => {
@@ -72,6 +76,9 @@ function Weather() {
     if (searchInput.length > 2) {
       const url = `https://api.weatherapi.com/v1/current.json?key=d3ec53b7238e4be58fe224501240203&q=${searchInput}`;
       try {
+        while (notifyRef.current.firstChild) {
+          notifyRef.current.removeChild(notifyRef.current.firstChild);
+        }
         inputRef.current.setAttribute("disabled", "");
         searchRef.current.classList.add("scale-110");
         searchRef.current.classList.remove("hover:scale-90");
