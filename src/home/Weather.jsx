@@ -1,10 +1,12 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, Suspense } from "react";
 import axios from "axios";
 
 function Weather() {
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const searchRef = useRef(null);
+  const notifyRef = useRef(null);
   const [searchInput, setSearchInput] = useState("");
   const [weather, setWeather] = useState(null);
 
@@ -20,12 +22,16 @@ function Weather() {
   useEffect(() => {
     const inputArea = inputRef.current;
     inputArea.addEventListener("focusin", () => {
-      searchContainerRef.current.classList.remove("bg-gray-300");
+      searchContainerRef.current.classList.remove("bg-gray-200");
       searchContainerRef.current.classList.add("bg-gray-400");
+      inputRef.current.classList.remove("text-slate-800");
+      inputRef.current.classList.add("text-white");
     });
     inputArea.addEventListener("focusout", () => {
       searchContainerRef.current.classList.remove("bg-gray-400");
-      searchContainerRef.current.classList.add("bg-gray-300");
+      searchContainerRef.current.classList.add("bg-gray-200");
+      inputRef.current.classList.remove("text-white");
+      inputRef.current.classList.add("text-slate-800");
     });
   }, []);
 
@@ -33,27 +39,38 @@ function Weather() {
     setSearchInput(event.target.value);
   };
 
-  async function fetchCities() {
-    try {
-      const response = await axios.request(options);
-      console.log(response.data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
   async function fetchWeather() {
     if (searchInput.length > 2) {
       const url = `https://api.weatherapi.com/v1/current.json?key=d3ec53b7238e4be58fe224501240203&q=${searchInput}`;
       try {
+        inputRef.current.setAttribute("disabled", "");
+        searchRef.current.classList.add("scale-110");
+        searchRef.current.classList.remove("hover:scale-90");
+        searchRef.current.setAttribute("disabled", "");
+        notifyRef.current.textContent = "Loading...";
+        notifyRef.current.classList.add("text-green-800");
+        notifyRef.current.classList.remove("hidden");
+
         const response = await fetch(url);
-        let weather = await response.json();
-        setWeather(weather);
-        console.log(weather);
+        notifyRef.current.classList.remove("text-green-800");
+        if (response.status == 200) {
+          let weather = await response.json();
+          setWeather(weather);
+          notifyRef.current.classList.add("hidden");
+          notifyRef.current.textContent = "";
+        } else if (response.status == 400) {
+          notifyRef.current.classList.add("text-red-400");
+          notifyRef.current.textContent = `${searchInput} does not exist`;
+          setWeather(null);
+        }
       } catch (e) {
-        console.log(e);
-        return;
+        console.log("Error: ", e.message);
       }
+
+      inputRef.current.removeAttribute("disabled");
+      searchRef.current.removeAttribute("disabled");
+      searchRef.current.classList.remove("scale-110");
+      searchRef.current.classList.add("hover:scale-90");
     }
   }
 
@@ -61,24 +78,26 @@ function Weather() {
     <div>
       <div className="w-full flex flex-col justify-center items-center p-4">
         <div
-          className="w-2/3 max-w-3xl h-12 px-4 flex bg-gray-300 outline-white rounded-full"
+          className="w-2/3 max-w-3xl h-12 px-4 flex bg-gray-200 outline-white rounded-full"
           ref={searchContainerRef}
         >
           <input
             type="text"
             name="search"
             id="search"
-            placeholder="Search city or zip code"
+            placeholder="Search city"
             autoComplete="off"
             ref={inputRef}
             onChange={handleInputChange}
-            className="w-full h-full pl-4 outline-none rounded-full bg-gray-300 focus:bg-gray-400 placeholder:text-gray-600 focus:placeholder:text-white text-white text-xl"
+            className="w-full h-full pl-4 outline-none rounded-full bg-gray-200 focus:bg-gray-400 placeholder:text-gray-600 text-slate-800 focus:placeholder:text-white text-xl"
           />
           <MagnifyingGlassIcon
-            className="w-10 hover:scale-90 active:scale-110"
+            className="w-10 hover:scale-90"
             onClick={fetchWeather}
+            ref={searchRef}
           />
         </div>
+        <p className="text-4xl hidden" ref={notifyRef}></p>
         <div className="w-5/6 max-w-4xl">
           {weather && (
             <div className="flex flex-col items-center justify-center">
@@ -102,7 +121,18 @@ function Weather() {
                     <sup>o</sup>
                   </p>
                 </div>
-                <p>Test</p>
+                <div>
+                  <div>
+                    <p>{weather.current.condition.text}</p>
+                  </div>
+                  <Suspense>
+                    <img
+                      src={weather.current.condition.icon}
+                      alt="condition"
+                      className="h-full"
+                    />
+                  </Suspense>
+                </div>
                 <div>
                   <div className="flex">
                     <img
@@ -119,18 +149,28 @@ function Weather() {
                 </div>
                 <div>
                   <div className="flex">
-                    <img src="/uv.svg" alt="uv icon" className="w-6" />
-                    <p className="text-lg">UV</p>
+                    <img
+                      src="/pressure.svg"
+                      alt="pressure icon"
+                      className="w-6"
+                    />
+                    <p className="text-lg">Pressure</p>
                   </div>
                   <p className="text-6xl text-blue-600">
-                    {weather.current.uv}
-                    <span className="text-4xl"> of 11</span>
+                    {weather.current.pressure_mb}
+                    <span className="text-4xl">mb</span>
                   </p>
                 </div>
                 <div>
                   <div className="flex">
                     <img src="/wind.svg" alt="wind icon" className="w-6" />
                     <p className="text-lg">Wind</p>
+                    <img
+                      src="/compass.svg"
+                      alt="compass icon"
+                      className="w-6 ml-4"
+                    />
+                    <p className="text-lg">{weather.current.wind_dir}</p>
                   </div>
                   <p className="text-6xl text-gray-600">
                     {weather.current.wind_kph}
