@@ -5,6 +5,7 @@ export default {
     extend: {
       colors: {
         "blue-1": "rgba(129, 136, 226, 0.6)",
+        "blue-2": "rgba(129, 136, 226, 0.7)",
       },
     },
   },
