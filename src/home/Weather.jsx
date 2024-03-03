@@ -1,6 +1,5 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import { useRef, useEffect, useState, Suspense } from "react";
-import axios from "axios";
 
 function Weather() {
   const searchContainerRef = useRef(null);
@@ -9,15 +8,6 @@ function Weather() {
   const notifyRef = useRef(null);
   const [searchInput, setSearchInput] = useState("");
   const [weather, setWeather] = useState(null);
-
-  const options = {
-    method: "GET",
-    url: `https://wft-geo-db.p.rapidapi.com/v1/geo/cities?title=${searchInput}`,
-    headers: {
-      "X-RapidAPI-Key": "1b4a9e954cmsh43969e215f47620p1569d9jsndc42f6fe522c",
-      "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
-    },
-  };
 
   useEffect(() => {
     const inputArea = inputRef.current;
